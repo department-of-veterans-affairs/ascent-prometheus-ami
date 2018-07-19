@@ -1,0 +1,10 @@
+[Unit]
+Description=startup alertmanager
+
+[Service]
+User=ec2-user
+ExecStart=/apps/alertmanager-0.14.0.linux-amd64/alertmanager --config.file=/apps/alertmanager-0.14.0.linux-amd64/alertmanager.yml  --storage.path=/apps/alertmanager-0.14.0.linux-amd64/data/
+
+[Install]
+WantedBy=default.target
+

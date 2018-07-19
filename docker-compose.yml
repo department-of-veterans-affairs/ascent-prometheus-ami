@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    # volumes:
+    #   - "./packer/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+
+  consul:
+    image: consul:1.0.2

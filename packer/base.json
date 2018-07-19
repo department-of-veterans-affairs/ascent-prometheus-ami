@@ -1,0 +1,65 @@
+{
+
+  "variables": {
+    "aws_access_key": null,
+    "aws_secret_key": null,
+    "aws_region": null,
+    "base_ami_version": "*",
+    "ami_version": "{{timestamp}}"
+  },
+
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "{{user `aws_region`}}",
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}",
+      "associate_public_ip_address": true,
+      "source_ami_filter": {
+        "filters": {
+          "name": "ascent-base-{{user `base_ami_version`}}"
+        },
+        "most_recent": true
+      },
+      "instance_type": "t2.large",
+      "ssh_username": "ec2-user",
+      "ssh_pty": true,
+      "ami_name": "ascent-monitor-{{user `ami_version`}}",
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "volume_size": 100,
+          "volume_type": "gp2",
+          "delete_on_termination": true
+        }
+      ],
+      "tags": {
+        "Name": "monitor-ascent"
+      },
+      "snapshot_tags": 
+      {
+        "Name": "monitor-ascent"
+      }
+    }
+  ],
+  "provisioners": [
+     {
+      "type": "file",
+      "source": "./prometheus/",
+      "destination": "/tmp"
+    },
+    {
+     "type": "file",
+      "source": "./alertmanager/",
+      "destination": "/tmp"
+    },
+    {
+      "type": "shell",
+      "scripts": [
+        "setup_monitor.sh"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=startup promethues
+
+[Service]
+User=ec2-user
+ExecStart=/apps/prometheus-2.2.0-rc.1.linux-amd64/prometheus --config.file=/apps/prometheus-2.2.0-rc.1.linux-amd64/prometheus.yml --storage.tsdb.path=/apps/prometheus-2.2.0-rc.1.linux-amd64/data/
+
+[Install]
+WantedBy=default.target
+
