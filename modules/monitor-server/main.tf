@@ -14,7 +14,6 @@ resource "aws_iam_user" "prometheus" {
 resource "aws_iam_policy_attachment" "prometheus-attach" {
   name       = "prometheus-attachment"
   users      = ["${aws_iam_user.prometheus.name}"]
-#  policy_arn = "${aws_iam_policy.prometheus_policy.arn}"
   policy_arn = "arn:aws-us-gov:iam::aws:policy/AmazonEC2ReadOnlyAccess"
 }
 
@@ -28,7 +27,7 @@ resource "aws_instance" "monitor" {
   key_name                    = "${var.ssh_key_name}"
   subnet_id                   = "${var.subnet_ids[length(var.subnet_ids) - 1]}"
   vpc_security_group_ids      = ["${aws_security_group.monitor_security_group.id}"]
-  #user_data                   = "${var.user_data == "" ? data.template_file.monitor_user_data.rendered : var.user_data}"
+  
   tags {
       Name = "${var.instance_name}"
   }
