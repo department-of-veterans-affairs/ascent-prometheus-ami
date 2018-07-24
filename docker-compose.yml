@@ -14,3 +14,20 @@ services:
       - "8500:8500"
     volumes:
       - "./docker/consul.json:/consul/config/telemetry.json"
+  
+  vault:
+    image: vault:0.10.3
+    ports:
+      - "8200:8200"
+    volumes:
+      - "./docker/vault.hcl:/vault/config/vault.hcl"
+  
+  statsd:
+    image: prom/statsd-exporter
+    ports:
+      - "9102:9102"
+      - "9125:9125"
+      - "9125:9125/udp"
+    # volumes:
+    #   - "./docker/statsd-mapping.conf:/tmp/statsd-mapping.conf"
+    # command: "-statsd.mapping-config=/tmp/statsd-mapping.conf"
