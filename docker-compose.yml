@@ -5,8 +5,12 @@ services:
     image: prom/prometheus
     ports:
       - "9090:9090"
-    # volumes:
-    #   - "./packer/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    volumes:
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
 
   consul:
-    image: consul:1.0.2
+    image: consul:1.2.1
+    ports:
+      - "8500:8500"
+    volumes:
+      - "./docker/consul.json:/consul/config/telemetry.json"
