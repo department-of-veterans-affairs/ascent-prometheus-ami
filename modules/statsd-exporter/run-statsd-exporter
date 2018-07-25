@@ -180,7 +180,7 @@ function run {
   fi
 
   if [[ -z "$user" ]]; then
-    user=$(get_owner_of_path "$config_dir")
+    user=$(get_owner_of_path "$bin_dir")
   fi
 
   generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$bin_dir" "$log_dir" "$log_level" "$user"
