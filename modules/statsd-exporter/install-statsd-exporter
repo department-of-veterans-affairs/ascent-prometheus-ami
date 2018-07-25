@@ -111,12 +111,12 @@ function install_binaries {
   local readonly statsd_exporter_dest_path="$bin_dir/statsd_exporter"
   local readonly run_statsd_exporter_dest_path="$bin_dir/run-statsd-exporter"
 
-  log_info "Downloading Vault $version from $url to $download_path"
-  curl -o "$download_path" "$url"
+  log_info "Downloading Prometheus statsd_exporter $version from $url to $download_path"
+  curl -L -o "$download_path" "$url"
   tar -xzf "$download_path" -C /tmp
 
   log_info "Moving statsd_exporter binary to $statsd_exporter_dest_path"
-  sudo mv "/tmp/statsd_exporter" "$statsd_exporter_dest_path"
+  sudo mv "/tmp/statsd_exporter-${version}.linux-amd64/statsd_exporter" "$statsd_exporter_dest_path"
   sudo chown "$username:$username" "$statsd_exporter_dest_path"
   sudo chmod a+x "$statsd_exporter_dest_path"
 
