@@ -172,7 +172,6 @@ function install {
 
   log_info "Starting Prometheus statsd_exporter install"
 
-  install_dependencies
   create_user "$user"
   create_install_paths "$path" "$user"
   install_binaries "$version" "$path" "$user" "$url"
