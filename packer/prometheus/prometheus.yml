@@ -32,8 +32,6 @@ scrape_configs:
   - job_name: 'dev_ec2_instances'
     ec2_sd_configs:
       - region: us-gov-west-1
-        access_key: <access_key>
-        secret_key: <secrte_key>
         port: 9100
     relabel_configs:
       - source_labels: [__meta_ec2_tag_Environment]
@@ -45,12 +43,10 @@ scrape_configs:
   - job_name: 'stage_ec2_instances'
     ec2_sd_configs:
       - region: us-gov-west-1
-        access_key: <access_key>
-        secret_key: <secrte_key>
         port: 9100
     relabel_configs:
       - source_labels: [__meta_ec2_tag_Environment]
-        regex: 'stage.*'
+        regex: 'staging.*'
         action: 'keep'
      # Use the instance tag as the instance label
       - source_labels: [__meta_ec2_tag_Name]
@@ -58,8 +54,6 @@ scrape_configs:
   - job_name: 'utility_ec2_instances'
     ec2_sd_configs:
       - region: us-gov-west-1
-        access_key: <access_key>
-        secret_key: <secrte_key>
         port: 9100
     relabel_configs:
       - source_labels: [__meta_ec2_tag_Environment]
@@ -86,4 +80,18 @@ scrape_configs:
         labels: {'host': 'consul2'}
       - targets: ['10.247.81.44:9102']
         labels: {'host': 'consul3'}
+  - job_name: 'Vault'
+    metrics_path: '/metrics'
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 9102
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'vault-.*'
+        action: 'keep'
+     # Use the instance tag as the instance label
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
 
