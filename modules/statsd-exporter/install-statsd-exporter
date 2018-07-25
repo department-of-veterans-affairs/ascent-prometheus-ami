@@ -1,0 +1,183 @@
+#!/bin/bash
+# This script can be used to install Vault and its dependencies. This script has been tested with the following
+# operating systems:
+#
+# 1. Ubuntu 16.04
+# 2. Amazon Linux
+
+set -e
+
+readonly DEFAULT_INSTALL_PATH="/opt/prometheus"
+readonly DEFAULT_USER="prometheus"
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SYSTEM_BIN_DIR="/usr/local/bin"
+
+readonly SCRIPT_NAME="$(basename "$0")"
+
+function print_usage {
+  echo
+  echo "Usage: install-statsd-exporter [OPTIONS]"
+  echo
+  echo "This script can be used to install the Prometheus statsd_exporter and its dependencies. This script has been tested with Ubuntu 16.04 and Amazon Linux."
+  echo
+  echo "Options:"
+  echo
+  echo -e "  --version\t\tThe version of statsd_exporter to install. Required."
+  echo -e "  --path\t\tThe path where statsd_exporter should be installed. Optional. Default: $DEFAULT_INSTALL_PATH."
+  echo -e "  --user\t\tThe user who will own the install directories. Optional. Default: $DEFAULT_USER."
+  echo -e "  --url\t\t\tAlternative URL to download statsd_exporter from. Optional."
+  echo
+  echo "Example:"
+  echo
+  echo "  install-statsd-exporter --version 0.6.0"
+}
+
+function log {
+  local readonly level="$1"
+  local readonly message="$2"
+  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
+}
+
+function log_info {
+  local readonly message="$1"
+  log "INFO" "$message"
+}
+
+function log_warn {
+  local readonly message="$1"
+  log "WARN" "$message"
+}
+
+function log_error {
+  local readonly message="$1"
+  log "ERROR" "$message"
+}
+
+function assert_not_empty {
+  local readonly arg_name="$1"
+  local readonly arg_value="$2"
+
+  if [[ -z "$arg_value" ]]; then
+    log_error "The value for '$arg_name' cannot be empty"
+    print_usage
+    exit 1
+  fi
+}
+
+function user_exists {
+  local readonly username="$1"
+  id "$username" >/dev/null 2>&1
+}
+
+function create_user {
+  local readonly username="$1"
+
+  if $(user_exists "$username"); then
+    echo "User $username already exists. Will not create again."
+  else
+    log_info "Creating user named $username"
+    sudo useradd --system "$username"
+  fi
+}
+
+function create_install_paths {
+  local readonly path="$1"
+  local readonly username="$2"
+
+  log_info "Creating install dirs for Prometheus statsd_exporter at $path"
+  sudo mkdir -p "$path"
+  sudo mkdir -p "$path/bin"
+  sudo mkdir -p "$path/config"
+  sudo mkdir -p "$path/log"
+  sudo chmod 755 "$path"
+  sudo chmod 755 "$path/bin"
+
+  log_info "Changing ownership of $path to $username"
+  sudo chown -R "$username:$username" "$path"
+}
+
+function install_binaries {
+  local readonly version="$1"
+  local readonly path="$2"
+  local readonly username="$3"
+  local readonly custom_url="$4"
+
+  local readonly default_url="https://github.com/prometheus/statsd_exporter/releases/download/v${version}/statsd_exporter-${version}.linux-amd64.tar.gz"
+  local readonly url=${custom_url:=$default_url}
+  local readonly download_path="/tmp/statsd_exporter_${version}_linux_amd64.tar.gz"
+  local readonly bin_dir="$path/bin"
+  local readonly statsd_exporter_dest_path="$bin_dir/statsd_exporter"
+  local readonly run_statsd_exporter_dest_path="$bin_dir/run-statsd-exporter"
+
+  log_info "Downloading Vault $version from $url to $download_path"
+  curl -o "$download_path" "$url"
+  tar -xzf "$download_path" -C /tmp
+
+  log_info "Moving statsd_exporter binary to $statsd_exporter_dest_path"
+  sudo mv "/tmp/statsd_exporter" "$statsd_exporter_dest_path"
+  sudo chown "$username:$username" "$statsd_exporter_dest_path"
+  sudo chmod a+x "$statsd_exporter_dest_path"
+
+  log_info "Copying Prometheus statsd_exporter run script to $run_statsd_exporter_dest_path"
+  sudo cp "$SCRIPT_DIR/run-statsd-exporter" "$run_statsd_exporter_dest_path"
+  sudo chown "$username:$username" "$run_statsd_exporter_dest_path"
+  sudo chmod a+x "$run_statsd_exporter_dest_path"
+}
+
+function install {
+  local version=""
+  local path="$DEFAULT_INSTALL_PATH"
+  local user="$DEFAULT_USER"
+  local url=""
+
+  while [[ $# > 0 ]]; do
+    local key="$1"
+
+    case "$key" in
+      --version)
+        version="$2"
+        shift
+        ;;
+      --path)
+        path="$2"
+        shift
+        ;;
+      --user)
+        user="$2"
+        shift
+        ;;
+      --url)
+        url="$2"
+        shift
+        ;;
+      --help)
+        print_usage
+        exit
+        ;;
+      *)
+        log_error "Unrecognized argument: $key"
+        print_usage
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  assert_not_empty "--version" "$version"
+  assert_not_empty "--path" "$path"
+  assert_not_empty "--user" "$user"
+
+  log_info "Starting Prometheus statsd_exporter install"
+
+  install_dependencies
+  create_user "$user"
+  create_install_paths "$path" "$user"
+  install_binaries "$version" "$path" "$user" "$url"
+
+  log_info "Prometheus statsd_exporter install complete!"
+}
+
+install "$@"

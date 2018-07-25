@@ -1,0 +1,190 @@
+#!/bin/bash
+# This script is used to configure and run statsd_exporter on an AWS server.
+
+set -e
+
+readonly SUPERVISOR_CONFIG_PATH="/etc/supervisor/conf.d/run-statsd-exporter.conf"
+
+readonly DEFAULT_LOG_LEVEL="info"
+
+readonly EC2_INSTANCE_METADATA_URL="http://169.254.169.254/latest/meta-data"
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_NAME="$(basename "$0")"
+
+function print_usage {
+  echo
+  echo "Usage: run-statsd [OPTIONS]"
+  echo
+  echo "This script is used to configure and run statsd_exporter on an AWS server."
+  echo
+  echo "Options:"
+  echo
+  echo -e "  --bin-dir\t\tThe path to the folder with Vault binary. Optional. Default is the absolute path of the parent folder of this script."
+  echo -e "  --log-dir\t\tThe path to the Vault log folder. Optional. Default is the absolute path of '../log', relative to this script."
+  echo -e "  --log-level\t\tThe log verbosity to use with Vault. Optional. Default is $DEFAULT_LOG_LEVEL."
+  echo -e "  --user\t\tThe user to run Vault as. Optional. Default is to use the owner of --config-dir."
+
+  echo
+  echo "Examples:"
+  echo
+  echo "  run-statsd-exporter"
+}
+
+function log {
+  local readonly level="$1"
+  local readonly message="$2"
+  local readonly timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  >&2 echo -e "${timestamp} [${level}] [$SCRIPT_NAME] ${message}"
+}
+
+function log_info {
+  local readonly message="$1"
+  log "INFO" "$message"
+}
+
+function log_warn {
+  local readonly message="$1"
+  log "WARN" "$message"
+}
+
+function log_error {
+  local readonly message="$1"
+  log "ERROR" "$message"
+}
+
+function strip_prefix {
+  local readonly str="$1"
+  local readonly prefix="$2"
+  echo "${str#$prefix}"
+}
+
+function assert_not_empty {
+  local readonly arg_name="$1"
+  local readonly arg_value="$2"
+
+  if [[ -z "$arg_value" ]]; then
+    log_error "The value for '$arg_name' cannot be empty"
+    print_usage
+    exit 1
+  fi
+}
+
+function lookup_path_in_instance_metadata {
+  local readonly path="$1"
+  curl --silent --location "$EC2_INSTANCE_METADATA_URL/$path/"
+}
+
+function get_instance_ip_address {
+  lookup_path_in_instance_metadata "local-ipv4"
+}
+
+function assert_is_installed {
+  local readonly name="$1"
+
+  if [[ ! $(command -v ${name}) ]]; then
+    log_error "The binary '$name' is required by this script but is not installed or in the system's PATH."
+    exit 1
+  fi
+}
+
+function generate_supervisor_config {
+  local readonly supervisor_config_path="$1"
+  local readonly bin_dir="$2"
+  local readonly log_dir="$3"
+  local readonly log_level="$4"
+  local readonly user="$5"
+
+  log_info "Creating Supervisor config file to run StatsD-Exporter in $supervisor_config_path"
+  cat > "$supervisor_config_path" <<EOF
+[program:statsd-exporter]
+command=$bin_dir/statsd_exporter
+stdout_logfile=$log_dir/statsd-exporter-stdout.log
+stderr_logfile=$log_dir/statsd-exporter-error.log
+numprocs=1
+autostart=true
+autorestart=true
+stopsignal=INT
+user=$user
+EOF
+}
+
+function start_statsd_exporter {
+  log_info "Reloading Supervisor config and starting StatsD Exporter"
+  supervisorctl reread
+  supervisorctl update
+}
+
+# Based on: http://unix.stackexchange.com/a/7732/215969
+function get_owner_of_path {
+  local readonly path="$1"
+  ls -ld "$path" | awk '{print $3}'
+}
+
+function run {
+  local bin_dir=""
+  local log_dir=""
+  local log_level="$DEFAULT_LOG_LEVEL"
+  local user=""
+  local all_args=()
+
+  while [[ $# > 0 ]]; do
+    local key="$1"
+
+    case "$key" in
+      --bin-dir)
+        assert_not_empty "$key" "$2"
+        bin_dir="$2"
+        shift
+        ;;
+      --log-dir)
+        assert_not_empty "$key" "$2"
+        log_dir="$2"
+        shift
+        ;;
+      --log-level)
+        assert_not_empty "$key" "$2"
+        log_level="$2"
+        shift
+        ;;
+      --user)
+        assert_not_empty "$key" "$2"
+        user="$2"
+        shift
+        ;;
+      --help)
+        print_usage
+        exit
+        ;;
+      *)
+        log_error "Unrecognized argument: $key"
+        print_usage
+        exit 1
+        ;;
+    esac
+
+    shift
+  done
+
+  assert_is_installed "supervisorctl"
+  assert_is_installed "aws"
+  assert_is_installed "curl"
+  assert_is_installed "jq"
+
+  if [[ -z "$bin_dir" ]]; then
+    bin_dir=$(cd "$SCRIPT_DIR/../bin" && pwd)
+  fi
+
+  if [[ -z "$log_dir" ]]; then
+    log_dir=$(cd "$SCRIPT_DIR/../log" && pwd)
+  fi
+
+  if [[ -z "$user" ]]; then
+    user=$(get_owner_of_path "$config_dir")
+  fi
+
+  generate_supervisor_config "$SUPERVISOR_CONFIG_PATH" "$bin_dir" "$log_dir" "$log_level" "$user"
+  start_statsd_exporter
+}
+
+run "$@"
