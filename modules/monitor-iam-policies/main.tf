@@ -13,8 +13,8 @@ data "aws_iam_policy_document" "auto_discover_monitor_targets" {
       "elasticloadbalancing:Describe*",
       "cloudwatch:ListMetrics",
       "cloudwatch:GetMetricStatistics",
-      "cloudwatch:Describe*"
-      "autoscaling:Describe*",
+      "cloudwatch:Describe*",
+      "autoscaling:Describe*"
     ]
 
     resources = ["*"]
