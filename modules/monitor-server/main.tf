@@ -27,6 +27,7 @@ resource "aws_instance" "monitor" {
   key_name                    = "${var.ssh_key_name}"
   subnet_id                   = "${var.subnet_ids[length(var.subnet_ids) - 1]}"
   vpc_security_group_ids      = ["${aws_security_group.monitor_security_group.id}"]
+  iam_instance_profile        = "${aws_iam_instance_profile.instance_profile}"
   
   tags {
       Name = "${var.instance_name}"
@@ -75,3 +76,52 @@ module "security_base_group_rules" {
   base_monitor_port                    = "${var.base_monitor_port}"
 }
 
+# ---------------------------------------------------------------------------------------------------------------------
+# ATTACH AN IAM ROLE TO MONITOR EC2 INSTANCE
+# We can use the IAM role to grant the instance IAM permissions so we can use the AWS CLI without having to figure out
+# how to get our secret AWS access keys onto the box.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_instance_profile" "instance_profile" {
+  name_prefix = "${var.instance_name}"
+  path        = "${var.instance_profile_path}"
+  role        = "${aws_iam_role.instance_role.name}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_iam_role" "instance_role" {
+  name_prefix        = "${var.instance_name}"
+  assume_role_policy = "${data.aws_iam_policy_document.instance_role.json}"
+
+  # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "aws_iam_policy_document" "instance_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# THE IAM POLICIES COME FROM THE MONITOR-IAM-POLICIES MODULE
+# ---------------------------------------------------------------------------------------------------------------------
+
+module "iam_policies" {
+  source = "../monitor-iam-policies"
+
+  iam_role_id = "${aws_iam_role.instance_role.id}"
+}
