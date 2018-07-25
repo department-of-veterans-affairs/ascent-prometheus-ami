@@ -6,17 +6,6 @@ terraform {
   required_version = ">= 0.9.3"
 }
 
-resource "aws_iam_user" "prometheus" {
-  name = "prometheus"
-  path = "/"
-}
-
-resource "aws_iam_policy_attachment" "prometheus-attach" {
-  name       = "prometheus-attachment"
-  users      = ["${aws_iam_user.prometheus.name}"]
-  policy_arn = "arn:aws-us-gov:iam::aws:policy/AmazonEC2ReadOnlyAccess"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Create the monitor instance
 # ---------------------------------------------------------------------------------------------------------------------
