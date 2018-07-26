@@ -48,23 +48,6 @@ module "security_group_rules" {
   prometheus_port                    = "${var.prometheus_port}"
 }
 
-resource "aws_security_group" "base_monitor_inbound_security_group" {
-  name_prefix = "base_monitor_inbound_security_group"
-  description = "Security group for the base monitor scraping"
-  vpc_id      = "${var.vpc_id}"
-  tags {
-    Name = "base_monitor_inbound_security_group"
-  }
-}
-
-module "security_base_group_rules" {
-  source = "../monitor-base-group-rules"
-
-  security_group_id                  = "${aws_security_group.base_monitor_inbound_security_group.id}"
-  allowed_inbound_cidr_blocks        = ["${var.allowed_inbound_cidr_blocks}"]
-  base_monitor_port                    = "${var.base_monitor_port}"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # ATTACH AN IAM ROLE TO MONITOR EC2 INSTANCE
 # We can use the IAM role to grant the instance IAM permissions so we can use the AWS CLI without having to figure out
