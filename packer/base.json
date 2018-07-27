@@ -56,6 +56,11 @@
       "destination": "/tmp"
     },
     {
+      "type": "file",
+       "source": "./blackbox-exporter/",
+       "destination": "/tmp"
+     },
+    {
       "type": "shell",
       "scripts": [
         "setup_monitor.sh"

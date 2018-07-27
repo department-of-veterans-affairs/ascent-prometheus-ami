@@ -78,7 +78,9 @@ scrape_configs:
         labels: {'host': 'consul2'}
       - targets: ['10.247.81.44:9102']
         labels: {'host': 'consul3'}
-  - job_name: 'Vault'
+
+  # Collect Metrics from our Vault instances via StatsD Exporter      
+  - job_name: 'vault-metrics'
     metrics_path: '/metrics'
     ec2_sd_configs:
       - region: us-gov-west-1
@@ -95,3 +97,26 @@ scrape_configs:
       - source_labels: [__meta_ec2_private_ip]
         target_label: ip_address
 
+  # Monitor the Vault Service Health Endpoint
+  - job_name: 'vault-health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    ec2_sd_configs:
+      - region: us-gov-west-1
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'vault-.*'
+        action: 'keep'
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: __param_target
+        replacement: https://$1:8200/v1/sys/health?standbyok=true # Set the target parameter as the vault health endpoint
+      - target_label: __address__
+        replacement: localhost:9115  # The blackbox exporter's real hostname:port.
+  
