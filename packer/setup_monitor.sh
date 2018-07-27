@@ -19,7 +19,6 @@ mkdir -p /apps/prometheus-2.2.0-rc.1.linux-amd64/rules
 cp /tmp/rules/* /apps/prometheus-2.2.0-rc.1.linux-amd64/rules
 cp /tmp/prometheus.yml /apps/prometheus-2.2.0-rc.1.linux-amd64/
 cp /tmp/alertmanager.* /apps/alertmanager-0.14.0.linux-amd64/
-cp /tmp/blackbox-exporter/* /apps/blackbox_exporter-0.12.0.linux-amd64/
 
 sudo cp /tmp/prometheus.service /usr/lib/systemd/system/prometheus.service
 
