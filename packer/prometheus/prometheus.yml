@@ -119,4 +119,7 @@ scrape_configs:
         replacement: https://$1:8200/v1/sys/health?standbyok=true # Set the target parameter as the vault health endpoint
       - target_label: __address__
         replacement: localhost:9115  # The blackbox exporter's real hostname:port.
+      - source_labels: []
+        target_label: service
+        replacement: Vault # Create a service label for alerting purposes
   

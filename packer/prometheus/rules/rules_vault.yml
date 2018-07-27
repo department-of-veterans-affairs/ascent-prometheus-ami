@@ -25,3 +25,13 @@ groups:
     annotations:
       summary: High frequency of Vault leadership setup failures
       description: There have been more than 5 Vault leadership setup failures in the past 1h.
+
+  # Alert if any service that is monitored by the blackbox_exporter fails to respond as health for more than 3 minutes.
+  - alert: ServiceHealth
+    expr: probe_success != 0
+    for: 3m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Service Unhealthy"
+      description: "{{ $labels.service }} running on {{ $labels.instance }}, {{ $labels.ip_address }}, is reporting as unhealthy for the past 3m."
