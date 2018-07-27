@@ -26,9 +26,11 @@ groups:
       summary: High frequency of Vault leadership setup failures
       description: There have been more than 5 Vault leadership setup failures in the past 1h.
 
+- name: services
+  rules:
   # Alert if any service that is monitored by the blackbox_exporter fails to respond as health for more than 3 minutes.
   - alert: ServiceHealth
-    expr: probe_success != 0
+    expr: probe_success == 0 #Zero means that the probe failed
     for: 3m
     labels:
       severity: critical
