@@ -29,6 +29,8 @@ services:
       - "9102:9102"
       - "9125:9125"
       - "9125:9125/udp"
-    # volumes:
-    #   - "./docker/statsd-mapping.conf:/tmp/statsd-mapping.conf"
-    # command: "-statsd.mapping-config=/tmp/statsd-mapping.conf"
+  
+  blackbox:
+    image: prom/blackbox-exporter
+    ports:
+      - "9115:9115"
