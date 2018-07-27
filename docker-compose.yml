@@ -7,6 +7,7 @@ services:
       - "9090:9090"
     volumes:
       - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "./packer/prometheus/rules:/opt/prometheus/rules"
 
   consul:
     image: consul:1.2.1

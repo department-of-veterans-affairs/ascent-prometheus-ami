@@ -11,7 +11,8 @@ tar -xvf alertmanager-0.14.0.linux-amd64.tar.gz
 rm -rf prometheus-2.2.0-rc.1.linux-amd64.tar.gz
 rm -rf alertmanager-0.14.0.linux-amd64.tar.gz
 
-cp /tmp/rules*.yml /apps/prometheus-2.2.0-rc.1.linux-amd64/
+mkdir -p /apps/prometheus-2.2.0-rc.1.linux-amd64/rules
+cp /tmp/rules/* /apps/prometheus-2.2.0-rc.1.linux-amd64/rules
 cp /tmp/prometheus.yml /apps/prometheus-2.2.0-rc.1.linux-amd64/
 cp /tmp/alertmanager.* /apps/alertmanager-0.14.0.linux-amd64/
 
