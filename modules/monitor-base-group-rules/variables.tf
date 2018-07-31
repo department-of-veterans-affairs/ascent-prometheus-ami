@@ -11,12 +11,18 @@ variable "allowed_inbound_cidr_blocks" {
   type        = "list"
 }
 
+variable "allowed_inbound_security_group_ids" {
+  description = "A list of security group IDs that will be allowed to connect to monitor"
+  type        = "list"
+  default     = []
+}
+
 ###############################################################################
 # OPTIONAL VARIABLES
 ###############################################################################
 
 
-variable "base_monitor_port" {
+variable "node_exporter_port" {
   description = "The port used for monitor server to scrape metrics"
   default     = 9100
 }
