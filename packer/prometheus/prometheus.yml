@@ -70,14 +70,26 @@ scrape_configs:
   #  static_configs:
   #      - targets:
   #        - '10.247.80.5:9090'
-  - job_name: 'consul'
-    static_configs:
-      - targets: ['10.247.81.26:9102']
-        labels: {'host': 'consul1'}
-      - targets: ['10.247.81.124:9102']
-        labels: {'host': 'consul2'}
-      - targets: ['10.247.81.44:9102']
-        labels: {'host': 'consul3'}
+
+# Collect metrics from Consul Servers
+  - job_name: 'consul-metrics'
+    metrics_path: '/v1/agent/metrics'
+    params:
+      format: ['prometheus']
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 8500
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'consul-.*'
+        action: 'keep'
+     # Use the instance tag as the instance label
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
 
   # Collect Metrics from our Vault instances via StatsD Exporter      
   - job_name: 'vault-metrics'
