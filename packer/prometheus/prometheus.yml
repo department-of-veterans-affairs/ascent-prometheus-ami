@@ -91,7 +91,7 @@ scrape_configs:
       - source_labels: [__meta_ec2_private_ip]
         target_label: ip_address
 
-  # Collect Metrics from our Vault instances via StatsD Exporter      
+  # Collect Metrics from our Vault instances via StatsD Exporter
   - job_name: 'vault-metrics'
     metrics_path: '/metrics'
     ec2_sd_configs:
@@ -134,4 +134,17 @@ scrape_configs:
       - source_labels: []
         target_label: service
         replacement: Vault # Create a service label for alerting purposes
-  
+
+  # Collect Dev Swarm Manager metrics
+  - job_name: 'dev_swarm_managers'
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 9323
+    relabel_configs:
+      - source_labels: [_meta_ec2_tag_Name]
+        regex: 'docker-dev-managers'
+        action: 'keep'
+      - source_labels: [_meta_ec2_meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [_meta_ec2_private_ip]
+        target_label: ip_address
