@@ -16,7 +16,6 @@
       "region": "{{user `aws_region`}}",
       "vpc_id": "{{user `vpc_id`}}",
       "subnet_id": "{{user `subnet_id`}}",
-      "associate_public_ip_address": true,
       "source_ami_filter": {
         "filters": {
           "name": "ascent-base-{{user `base_ami_version`}}"
@@ -38,7 +37,7 @@
       "tags": {
         "Name": "monitor-ascent"
       },
-      "snapshot_tags": 
+      "snapshot_tags":
       {
         "Name": "monitor-ascent"
       }
@@ -51,15 +50,20 @@
       "destination": "/tmp"
     },
     {
+      "type": "file",
+      "source": "blackbox-exporter/blackbox-exporter.service",
+      "destination": "/tmp/blackbox-exporter.service"
+    },
+    {
+      "type": "file",
+      "source": "blackbox-exporter/blackbox.yml",
+      "destination": "/tmp/blackbox.yml"
+    },
+    {
      "type": "file",
       "source": "./alertmanager/",
       "destination": "/tmp"
     },
-    {
-      "type": "file",
-       "source": "./blackbox-exporter/",
-       "destination": "/tmp"
-     },
     {
       "type": "shell",
       "scripts": [
