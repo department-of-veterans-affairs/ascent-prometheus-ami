@@ -52,14 +52,9 @@
     },
     {
       "type": "file",
-      "source": "blackbox-exporter/blackbox-exporter.service",
-      "destination": "/tmp/blackbox-exporter.service"
-    },
-    {
-      "type": "file",
-      "source": "blackbox-exporter/blackbox.yml",
-      "destination": "/tmp/blackbox.yml"
-    },
+       "source": "./blackbox-exporter/",
+       "destination": "/tmp"
+     },
     {
      "type": "file",
       "source": "./alertmanager/",
