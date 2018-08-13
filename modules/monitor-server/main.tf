@@ -17,10 +17,7 @@ resource "aws_instance" "monitor" {
   subnet_id                   = "${var.subnet_ids[length(var.subnet_ids) - 1]}"
   vpc_security_group_ids      = ["${aws_security_group.monitor_security_group.id}"]
   iam_instance_profile        = "${aws_iam_instance_profile.instance_profile.name}"
-  
-  tags {
-      Name = "${var.instance_name}"
-  }
+  tags = "${merge(var.tags, map("Name", "${var.instance_name}"))}" 
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
