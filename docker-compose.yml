@@ -5,8 +5,32 @@ services:
     image: prom/prometheus
     ports:
       - "9090:9090"
-    # volumes:
-    #   - "./packer/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    volumes:
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "./packer/prometheus/rules:/opt/prometheus/rules"
 
   consul:
-    image: consul:1.0.2
+    image: consul:1.2.1
+    ports:
+      - "8500:8500"
+    volumes:
+      - "./docker/consul.json:/consul/config/telemetry.json"
+  
+  vault:
+    image: vault:0.10.3
+    ports:
+      - "8200:8200"
+    volumes:
+      - "./docker/vault.hcl:/vault/config/vault.hcl"
+  
+  statsd:
+    image: prom/statsd-exporter
+    ports:
+      - "9102:9102"
+      - "9125:9125"
+      - "9125:9125/udp"
+  
+  blackbox:
+    image: prom/blackbox-exporter
+    ports:
+      - "9115:9115"

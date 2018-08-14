@@ -6,18 +6,6 @@ terraform {
   required_version = ">= 0.9.3"
 }
 
-resource "aws_iam_user" "prometheus" {
-  name = "prometheus"
-  path = "/"
-}
-
-resource "aws_iam_policy_attachment" "prometheus-attach" {
-  name       = "prometheus-attachment"
-  users      = ["${aws_iam_user.prometheus.name}"]
-#  policy_arn = "${aws_iam_policy.prometheus_policy.arn}"
-  policy_arn = "arn:aws-us-gov:iam::aws:policy/AmazonEC2ReadOnlyAccess"
-}
-
 # ---------------------------------------------------------------------------------------------------------------------
 # Create the monitor instance
 # ---------------------------------------------------------------------------------------------------------------------
@@ -28,10 +16,8 @@ resource "aws_instance" "monitor" {
   key_name                    = "${var.ssh_key_name}"
   subnet_id                   = "${var.subnet_ids[length(var.subnet_ids) - 1]}"
   vpc_security_group_ids      = ["${aws_security_group.monitor_security_group.id}"]
-  #user_data                   = "${var.user_data == "" ? data.template_file.monitor_user_data.rendered : var.user_data}"
-  tags {
-      Name = "${var.instance_name}"
-  }
+  iam_instance_profile        = "${aws_iam_instance_profile.instance_profile.name}"
+  tags = "${merge(var.tags, map("Name", "${var.instance_name}"))}" 
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -59,20 +45,52 @@ module "security_group_rules" {
   prometheus_port                    = "${var.prometheus_port}"
 }
 
-resource "aws_security_group" "base_monitor_inbound_security_group" {
-  name_prefix = "base_monitor_inbound_security_group"
-  description = "Security group for the base monitor scraping"
-  vpc_id      = "${var.vpc_id}"
-  tags {
-    Name = "base_monitor_inbound_security_group"
+# ---------------------------------------------------------------------------------------------------------------------
+# ATTACH AN IAM ROLE TO MONITOR EC2 INSTANCE
+# We can use the IAM role to grant the instance IAM permissions so we can use the AWS CLI without having to figure out
+# how to get our secret AWS access keys onto the box.
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_instance_profile" "instance_profile" {
+  name_prefix = "${var.instance_name}"
+  path        = "${var.instance_profile_path}"
+  role        = "${aws_iam_role.instance_role.name}"
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-module "security_base_group_rules" {
-  source = "../monitor-base-group-rules"
+resource "aws_iam_role" "instance_role" {
+  name_prefix        = "${var.instance_name}"
+  assume_role_policy = "${data.aws_iam_policy_document.instance_role.json}"
 
-  security_group_id                  = "${aws_security_group.base_monitor_inbound_security_group.id}"
-  allowed_inbound_cidr_blocks        = ["${var.allowed_inbound_cidr_blocks}"]
-  base_monitor_port                    = "${var.base_monitor_port}"
+  # aws_iam_instance_profile.instance_profile in this module sets create_before_destroy to true, which means
+  # everything it depends on, including this resource, must set it as well, or you'll get cyclic dependency errors
+  # when you try to do a terraform destroy.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
+data "aws_iam_policy_document" "instance_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# THE IAM POLICIES COME FROM THE MONITOR-IAM-POLICIES MODULE
+# ---------------------------------------------------------------------------------------------------------------------
+
+module "iam_policies" {
+  source = "../monitor-iam-policies"
+
+  iam_role_id = "${aws_iam_role.instance_role.id}"
+}

@@ -9,7 +9,7 @@ variable "instance_name" {
 
 variable "ami_id" {
   description = "The ID of the AMI to run in this cluster."
-}  
+}
 
 variable "instance_type" {
   description = "The type of EC2 Instances to run for the fortify instance (e.g. m4.large)"
@@ -38,6 +38,12 @@ variable "subnet_ids" {
 #  description = "A User data script to execute whil the server is booting."
 #  default     = ""
 #}
+
+variable "tags" {
+  description = "Tags to apply to the EC2 instance. Name will be applied by default."
+  type        = "map"
+  default     = {}
+}
 
 variable "ssh_key_name" {
   description  = "The name of an EC2 Key Pair that can be used to SSH to the EC2 Instance. Set to an empty string to not associate a key pair"

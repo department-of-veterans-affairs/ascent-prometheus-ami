@@ -1,0 +1,31 @@
+groups:
+- name: consul
+  rules:
+  # Monitor for any Consul servers that lose their raft leader
+  - alert: LeaderCannotContactFollowers
+    expr: consul_raft_leader_lastContact > 200
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Consul leader is taking too long to contact followers"
+      description: "Consul leader, {{ $labels.ip_address }}, for {{ $labels.environment }} is taking longer than 200ms to contact its followers. This may indicate network issues or raft instability."
+
+  # Make sure raft commit time is below 200ms. This is the time it takes to commit a new entry to the Raft log on the leader
+  - alert: ConsulRaftCommitTime
+    expr: consul_raft_commitTime > 200
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Consul Raft commit time is >200ms"
+      description: "{{ $labels.instance }}, {{ $labels.ip_address }}, is reporting Raft commit times over 200ms for more than 5m."
+
+  # Check for frequent leadership changes
+  - alert: ConsulLeadershipChange
+    expr: consul_raft_state_leader > 1
+    labels:
+      severity: warning
+    annotations:
+      summary: "Consul Leadership Change"
+      description: "{{ $labels.instance }}, {{ $labels.ip_address }}, is reporting multiple leadership changes. This may indicate Consul cluster instability."

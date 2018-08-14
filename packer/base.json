@@ -38,7 +38,7 @@
       "tags": {
         "Name": "monitor-ascent"
       },
-      "snapshot_tags": 
+      "snapshot_tags":
       {
         "Name": "monitor-ascent"
       }
@@ -50,6 +50,11 @@
       "source": "./prometheus/",
       "destination": "/tmp"
     },
+    {
+      "type": "file",
+       "source": "./blackbox-exporter/",
+       "destination": "/tmp"
+     },
     {
      "type": "file",
       "source": "./alertmanager/",
