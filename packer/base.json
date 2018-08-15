@@ -47,7 +47,7 @@
       "tags": {
         "Name": "monitor-ascent"
       },
-      "snapshot_tags": 
+      "snapshot_tags":
       {
         "Name": "monitor-ascent"
       }
@@ -60,15 +60,15 @@
       "destination": "/tmp"
     },
     {
-     "type": "file",
-      "source": "./alertmanager/",
-      "destination": "/tmp"
-    },
-    {
       "type": "file",
        "source": "./blackbox-exporter/",
        "destination": "/tmp"
      },
+    {
+     "type": "file",
+      "source": "./alertmanager/",
+      "destination": "/tmp"
+    },
     {
       "type": "shell",
       "scripts": [

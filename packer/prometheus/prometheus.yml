@@ -38,6 +38,9 @@ scrape_configs:
      # Use the instance tag as the instance label
       - source_labels: [__meta_ec2_tag_Name]
         target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+
   - job_name: 'stage_ec2_instances'
     ec2_sd_configs:
       - region: us-gov-west-1
@@ -49,6 +52,37 @@ scrape_configs:
      # Use the instance tag as the instance label
       - source_labels: [__meta_ec2_tag_Name]
         target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+
+  - job_name: 'perf_ec2_instances'
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Environment]
+        regex: 'Perf.*'
+        action: 'keep'
+     # Use the instance tag as the instance label
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+
+  - job_name: 'prod_ec2_instances'
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 9100
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Environment]
+        regex: 'prod.*'
+        action: 'keep'
+     # Use the instance tag as the instance label
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+
   - job_name: 'utility_ec2_instances'
     ec2_sd_configs:
       - region: us-gov-west-1
@@ -60,6 +94,9 @@ scrape_configs:
      # Use the instance tag as the instance label
       - source_labels: [__meta_ec2_tag_Name]
         target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
+
   #- job_name: 'federate'
   #  scrape_interval: 60s
   #  honor_labels: true
@@ -91,7 +128,7 @@ scrape_configs:
       - source_labels: [__meta_ec2_private_ip]
         target_label: ip_address
 
-  # Collect Metrics from our Vault instances via StatsD Exporter      
+  # Collect Metrics from our Vault instances via StatsD Exporter
   - job_name: 'vault-metrics'
     metrics_path: '/metrics'
     ec2_sd_configs:
@@ -120,12 +157,10 @@ scrape_configs:
       - source_labels: [__meta_ec2_tag_Name]
         regex: 'vault-.*'
         action: 'keep'
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
       - source_labels: [__meta_ec2_tag_Environment]
         target_label: environment
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
       - source_labels: [__meta_ec2_private_ip]
         target_label: __param_target
         replacement: https://$1:8200/v1/sys/health?standbyok=true # Set the target parameter as the vault health endpoint
@@ -134,4 +169,44 @@ scrape_configs:
       - source_labels: []
         target_label: service
         replacement: Vault # Create a service label for alerting purposes
-  
+
+  # Monitor the Consul Service Health Endpoint
+  - job_name: 'consul-health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    ec2_sd_configs:
+      - region: us-gov-west-1
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'consul-.*'
+        action: 'keep'
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_instance_id, __meta_ec2_private_ip]
+        target_label: __param_target
+        regex: '(i-[\d\w]+);(.*)'
+        replacement: http://$2:8500/v1/health/node/$1 # Set the target parameter as a consul node endpoint
+      - target_label: __address__
+        replacement: localhost:9115  # The blackbox exporter's real hostname:port.
+      - source_labels: []
+        target_label: service
+        replacement: Consul # Create a service label for alerting purposes
+
+  # Collect Dev Swarm metrics
+  - job_name: 'docker-swarm-metrics'
+    ec2_sd_configs:
+      - region: us-gov-west-1
+        port: 9323
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'docker-.*'
+        action: 'keep'
+      - source_labels: [__meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: ip_address
