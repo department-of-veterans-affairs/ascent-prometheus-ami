@@ -1,8 +1,16 @@
 #!/bin/bash -ex
 
-sudo mkdir -p /apps/
+sudo mkdir -p /apps/prometheus-2.2.0-rc.1.linux-amd64/data/
 sudo chown -R ec2-user:ec2-user /apps
 cd /apps/
+
+#mount data dir
+sudo ls -l /dev
+sudo mkfs -t ext4 /dev/xvdb
+#sudo mkdir /apps/prometheus-2.2.0-rc.1.linux-amd64/data/
+sudo mount /dev/xvdb /apps/prometheus-2.2.0-rc.1.linux-amd64/data/
+echo "/dev/xvdb      /apps/prometheus-2.2.0-rc.1.linux-amd64/data/   ext4    defaults,nofail " | sudo tee --append /etc/fstab > /dev/null
+sudo chown -R ec2-user:ec2-user /apps
 
 curl -LO "https://github.com/prometheus/prometheus/releases/download/v2.2.0-rc.1/prometheus-2.2.0-rc.1.linux-amd64.tar.gz"
 curl -LO "https://github.com/prometheus/alertmanager/releases/download/v0.14.0/alertmanager-0.14.0.linux-amd64.tar.gz"
