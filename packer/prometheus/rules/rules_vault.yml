@@ -36,4 +36,4 @@ groups:
       severity: critical
     annotations:
       summary: "Service Unhealthy"
-      description: "{{ $labels.service }} running on {{ $labels.instance }}, {{ $labels.ip_address }}, is reporting as unhealthy for the past 3m."
+      description: "{{ $labels.service }} running on {{ $labels.instance }}, is reporting as unhealthy for the past 3m."
