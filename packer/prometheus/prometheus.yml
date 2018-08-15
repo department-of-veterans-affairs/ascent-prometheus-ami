@@ -36,10 +36,8 @@ scrape_configs:
         regex: 'dev.*'
         action: 'keep'
      # Use the instance tag as the instance label
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
 
   - job_name: 'stage_ec2_instances'
     ec2_sd_configs:
@@ -50,10 +48,8 @@ scrape_configs:
         regex: 'staging.*'
         action: 'keep'
      # Use the instance tag as the instance label
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
 
   - job_name: 'perf_ec2_instances'
     ec2_sd_configs:
@@ -64,10 +60,8 @@ scrape_configs:
         regex: 'Perf.*'
         action: 'keep'
      # Use the instance tag as the instance label
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
 
   - job_name: 'prod_ec2_instances'
     ec2_sd_configs:
@@ -78,10 +72,8 @@ scrape_configs:
         regex: 'prod.*'
         action: 'keep'
      # Use the instance tag as the instance label
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
 
   - job_name: 'utility_ec2_instances'
     ec2_sd_configs:
@@ -92,10 +84,9 @@ scrape_configs:
         regex: 'utility.*'
         action: 'keep'
      # Use the instance tag as the instance label
-      - source_labels: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      - source_labels: [__meta_ec2_private_ip]
-        target_label: ip_address
+      
 
   #- job_name: 'federate'
   #  scrape_interval: 60s
