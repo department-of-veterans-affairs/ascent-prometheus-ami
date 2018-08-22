@@ -15,11 +15,10 @@ groups:
     labels:
       severity: critical
     annotations:
-      title: 'Less than 10% disk space left'
+      title: 'Less than 20% disk space left'
       description: |
         Consider sshing into the instance and removing old logs, clean
         temp files, or remove old apt packages with `apt-get autoremove`
-      runbook: troubleshooting/filesystem_alerts.md
       value: '{{ $value | humanize }}%'
       device: '{{ $labels.device }}%'
       mount_point: '{{ $labels.mountpoint }}%'
@@ -33,7 +32,6 @@ groups:
       description: |
         Consider sshing into the instance and removing old logs, clean
         temp files, or remove old apt packages with `apt-get autoremove`
-      runbook: troubleshooting/filesystem_alerts.md
       value: '{{ $value | humanize }}%'
       device: '{{ $labels.device }}%'
       mount_point: '{{ $labels.mountpoint }}%'
