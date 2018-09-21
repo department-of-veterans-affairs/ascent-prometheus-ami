@@ -86,7 +86,7 @@ scrape_configs:
      # Use the instance tag as the instance label
       - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
         target_label: instance
-      
+
 
   #- job_name: 'federate'
   #  scrape_interval: 60s
@@ -160,6 +160,30 @@ scrape_configs:
       - source_labels: []
         target_label: service
         replacement: Vault # Create a service label for alerting purposes
+
+  # Monitor the Grafana Health Endpoint
+  - job_name: 'grafana-health'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    ec2_sd_configs:
+      - region: us-gov-west-1
+    relabel_configs:
+      - source_labels: [__meta_ec2_tag_Name]
+        regex: 'grafana'
+        action: 'keep'
+      - source_labels: [__meta_ec2_private_ip, __meta_ec2_tag_Name]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_Environment]
+        target_label: environment
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: __param_target
+        replacement: http://$1:3000/api/health # Set the target parameter as the grafana health endpoint
+      - target_label: __address__
+        replacement: localhost:9115  # The blackbox exporter's real hostname:port.
+      - source_labels: []
+        target_label: service
+        replacement: Grafana # Create a service label for alerting purposes
 
   # Monitor the Consul Service Health Endpoint
   - job_name: 'consul-health'
