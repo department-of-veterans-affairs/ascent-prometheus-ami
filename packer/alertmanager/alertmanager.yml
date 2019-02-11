@@ -46,7 +46,7 @@ route:
 receivers:
 - name: 'team-devOps-email'
   email_configs:
-  - to: 'brett.kippes2@va.gov,elisabeth.sorrell@csra.com,jluck@meetveracity.com'
+  - to: 'elisabeth.sorrell@csra.com,jluck@meetveracity.com'
 
 - name: 'team-X-pager'
   email_configs:
@@ -68,9 +68,8 @@ receivers:
 
 - name: 'team-devOps-hipchat'
   hipchat_configs:
-  - auth_token: <hipchat_auth_token> 
+  - auth_token: <hipchat_auth_token>
     room_id: <room_id>
     message_format: text
     notify: true
     color: yellow
-
